@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened, synchronize]
     paths: [js/package.json]
-if: github.actor == 'dependabot[bot]'
+if: github.actor == 'dependabot[bot]' || contains(github.event.pull_request.labels.*.name, 'clerk-bump')
 engine: copilot
 permissions: read-all
 network:
