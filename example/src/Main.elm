@@ -9,11 +9,12 @@ import Browser
 import Browser.Navigation as Nav
 import Clerk
 import Effect exposing (Effect)
-import Html exposing (Html, button, div, h1, p, text)
+import Html exposing (Html, button, dd, div, dl, dt, h1, h2, li, p, text, ul)
 import Html.Attributes exposing (attribute, id)
 import Html.Events exposing (onClick)
 import Json.Decode as Decode exposing (Value)
 import Ports
+import Time
 import Url exposing (Url)
 
 
@@ -177,6 +178,7 @@ view model =
                 ]
             , div [ attribute "data-testid" "state" ] [ text (stateLabel model.clerk) ]
             , viewUserEmail model.clerk
+            , viewProfile model.clerk
             , div [ attribute "data-testid" "token" ] [ text (Maybe.withDefault "" model.token) ]
             , div [ attribute "data-testid" "error" ] [ text (Maybe.withDefault "" model.lastError) ]
             , button [ attribute "data-testid" "sign-in", onClick ClickedSignIn ] [ text "Sign in" ]
@@ -219,3 +221,106 @@ viewUserEmail state =
 
         _ ->
             div [ attribute "data-testid" "user-email" ] []
+
+
+{-| A visual check that the full resource surface arrives: every value here
+comes straight out of `Clerk.User`, `Clerk.Session`, and the nested records.
+-}
+viewProfile : Clerk.State -> Html Msg
+viewProfile state =
+    case state of
+        Clerk.SignedIn { session, user, organization } ->
+            div [ attribute "data-testid" "profile" ]
+                [ h2 [] [ text "User" ]
+                , dl []
+                    (List.concatMap row
+                        [ ( "id", user.id )
+                        , ( "username", orDash user.username )
+                        , ( "fullName", orDash user.fullName )
+                        , ( "hasImage", bool user.hasImage )
+                        , ( "passwordEnabled", bool user.passwordEnabled )
+                        , ( "twoFactorEnabled", bool user.twoFactorEnabled )
+                        , ( "lastSignInAt", maybeTime user.lastSignInAt )
+                        , ( "createdAt", maybeTime user.createdAt )
+                        ]
+                    )
+                , h2 [] [ text "Email addresses" ]
+                , ul [ attribute "data-testid" "email-addresses" ]
+                    (List.map
+                        (\email ->
+                            li []
+                                [ text email.emailAddress
+                                , text " ("
+                                , text (orDash email.verification.status)
+                                , text ")"
+                                ]
+                        )
+                        user.emailAddresses
+                    )
+                , h2 [] [ text "Organization memberships" ]
+                , ul [ attribute "data-testid" "memberships" ]
+                    (List.map
+                        (\membership ->
+                            li []
+                                [ text membership.organization.name
+                                , text ": "
+                                , text membership.roleName
+                                , text " ("
+                                , text (String.fromInt (List.length membership.permissions))
+                                , text " permissions)"
+                                ]
+                        )
+                        user.organizationMemberships
+                    )
+                , h2 [] [ text "Session" ]
+                , dl []
+                    (List.concatMap row
+                        [ ( "id", session.id )
+                        , ( "status", session.status )
+                        , ( "expireAt", time session.expireAt )
+                        , ( "lastActiveOrganizationId", orDash session.lastActiveOrganizationId )
+                        , ( "tasks", String.join ", " session.tasks )
+                        , ( "identifier", session.publicUserData.identifier )
+                        ]
+                    )
+                , h2 [] [ text "Active organization" ]
+                , div [ attribute "data-testid" "organization" ]
+                    [ text
+                        (organization
+                            |> Maybe.map (\org -> org.name ++ " (" ++ String.fromInt org.membersCount ++ " members)")
+                            |> Maybe.withDefault "none"
+                        )
+                    ]
+                ]
+
+        _ ->
+            div [ attribute "data-testid" "profile" ] []
+
+
+row : ( String, String ) -> List (Html Msg)
+row ( label, value ) =
+    [ dt [] [ text label ], dd [ attribute "data-field" label ] [ text value ] ]
+
+
+orDash : Maybe String -> String
+orDash =
+    Maybe.withDefault "-"
+
+
+bool : Bool -> String
+bool value =
+    if value then
+        "yes"
+
+    else
+        "no"
+
+
+time : Time.Posix -> String
+time posix =
+    String.fromInt (Time.posixToMillis posix)
+
+
+maybeTime : Maybe Time.Posix -> String
+maybeTime =
+    Maybe.map time >> Maybe.withDefault "-"

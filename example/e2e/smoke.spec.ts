@@ -59,6 +59,14 @@ test('sign in, get a token, sign out', async ({ page }) => {
   await expect(page.getByTestId('state')).toHaveText('signedIn', { timeout: 15_000 })
   await expect(page.getByTestId('user-email')).toContainText(TEST_EMAIL)
 
+  // The full resource surface: nested email addresses with verification
+  // status, session fields, and the (absent) active organization.
+  await expect(page.getByTestId('email-addresses')).toContainText(`${TEST_EMAIL} (verified)`)
+  await expect(page.locator('[data-field="status"]')).toHaveText('active')
+  await expect(page.locator('[data-field="identifier"]')).toHaveText(TEST_EMAIL)
+  await expect(page.getByTestId('organization')).toHaveText('none')
+  await page.screenshot({ path: 'test-results/signed-in.png', fullPage: true })
+
   // (c) click get-token, token text matches a JWT shape.
   await page.getByTestId('get-token').click()
   await expect(page.getByTestId('token')).toHaveText(JWT_RE, { timeout: 15_000 })
