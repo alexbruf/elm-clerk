@@ -152,6 +152,7 @@ function parseElmRecordFields(source, aliasName) {
     .filter(Boolean)
     .map((item) => item.split(':')[0].trim())
     .filter(Boolean)
+    .map((name) => (name === 'type_' ? 'type' : name)) // Elm reserved word rename
 }
 
 // ---------------------------------------------------------------------------
@@ -223,11 +224,10 @@ const protocolTsSource = readMaybe('js/src/protocol.ts')
 const indexTsSource = readMaybe('js/src/index.ts')
 const jsPackageRaw = readMaybe('js/package.json')
 
-const resourceFiles = {
-  User: 'src/Clerk/User.elm',
-  Session: 'src/Clerk/Session.elm',
-  Organization: 'src/Clerk/Organization.elm',
-}
+// One Elm module per resource listed in coverage.json: src/Clerk/<Name>.elm
+const resourceFiles = Object.fromEntries(
+  Object.keys(coverage.resources ?? {}).map((name) => [name, `src/Clerk/${name}.elm`])
+)
 
 let missingSource = false
 for (const [label, src] of [

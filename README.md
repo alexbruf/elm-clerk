@@ -181,6 +181,20 @@ a tag or a field; the same section explains which files have to move
 together (`coverage.json`, Elm types and decoders, shim dispatch, tests in
 both packages) and how CI enforces it.
 
+## Resources
+
+`SignedIn` carries `Clerk.User`, `Clerk.Session`, and `Maybe Clerk.Organization`.
+Each is a plain record mirroring the full ClerkJS 6 data surface, with nested
+records for `Clerk.OrganizationMembership`, `Clerk.EmailAddress`,
+`Clerk.PhoneNumber`, `Clerk.Web3Wallet`, `Clerk.ExternalAccount`,
+`Clerk.EnterpriseAccount`, `Clerk.EnterpriseConnection`, `Clerk.Passkey`,
+`Clerk.Verification`, `Clerk.IdentificationLink`, `Clerk.PublicUserData`, and
+`Clerk.Actor`. Timestamps are `Time.Posix`, nullable strings are `Maybe String`,
+and metadata objects are `Json.Decode.Value`. The exact field list per record
+is `coverage.json`; the JSON each field carries is spelled out in `CLAUDE.md`.
+Deliberate omissions (`Session.lastActiveToken`, `Session.user`,
+`Session.agent`, passkey `publicKey`) are listed in `coverage.json.notes`.
+
 ## coverage.json
 
 `coverage.json` at the repo root is the single source of truth for what

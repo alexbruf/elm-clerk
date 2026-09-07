@@ -5,29 +5,15 @@
  * real 6.31.0 declarations (`dist/types/core/clerk.d.ts`).
  */
 
-export interface FakeUser {
-  id: string;
-  primaryEmailAddress: { emailAddress: string } | null;
-  firstName: string | null;
-  lastName: string | null;
-  imageUrl: string;
-  createdAt: Date | null;
-}
+import type { OrganizationLike, SessionLike, UserLike } from '../src/protocol.js';
 
-export interface FakeSession {
-  id: string;
-  status: string;
-  lastActiveAt: Date;
-  expireAt: Date;
+export type FakeUser = UserLike;
+
+export interface FakeSession extends SessionLike {
   getToken: (options?: { template?: string }) => Promise<string | null>;
 }
 
-export interface FakeOrganization {
-  id: string;
-  name: string;
-  slug: string | null;
-  imageUrl: string;
-}
+export type FakeOrganization = OrganizationLike;
 
 export interface FakeResources {
   session?: FakeSession | null;
@@ -176,7 +162,13 @@ export function makeUser(overrides: Partial<FakeUser> = {}): FakeUser {
     firstName: 'Ada',
     lastName: 'Lovelace',
     imageUrl: 'https://img.clerk.com/user_1',
+    hasImage: true,
+    passwordEnabled: true,
+    totpEnabled: false,
+    backupCodeEnabled: false,
+    twoFactorEnabled: false,
     createdAt: CREATED_AT,
+    updatedAt: CREATED_AT,
     ...overrides,
   };
 }
@@ -187,6 +179,17 @@ export function makeSession(overrides: Partial<FakeSession> = {}): FakeSession {
     status: 'active',
     lastActiveAt: LAST_ACTIVE_AT,
     expireAt: EXPIRE_AT,
+    abandonAt: EXPIRE_AT,
+    createdAt: CREATED_AT,
+    updatedAt: LAST_ACTIVE_AT,
+    publicUserData: {
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      imageUrl: 'https://img.clerk.com/user_1',
+      hasImage: true,
+      identifier: 'ada@example.com',
+      userId: 'user_1',
+    },
     getToken: async () => 'jwt-token',
     ...overrides,
   };
@@ -198,6 +201,15 @@ export function makeOrganization(overrides: Partial<FakeOrganization> = {}): Fak
     name: 'ViewEngine',
     slug: 'viewengine',
     imageUrl: 'https://img.clerk.com/org_1',
+    hasImage: true,
+    membersCount: 12,
+    pendingInvitationsCount: 3,
+    adminDeleteEnabled: true,
+    maxAllowedMemberships: 25,
+    selfServeSSOEnabled: false,
+    exclusiveMembership: false,
+    createdAt: CREATED_AT,
+    updatedAt: LAST_ACTIVE_AT,
     ...overrides,
   };
 }

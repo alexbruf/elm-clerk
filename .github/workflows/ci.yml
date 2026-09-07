@@ -2,6 +2,7 @@ name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 concurrency:
@@ -45,6 +46,12 @@ jobs:
 
       - name: elm-test
         run: elm-test
+
+      - name: Shared fixtures are in sync (fixtures/*.json -> tests/Fixtures.elm)
+        run: |
+          node scripts/gen-fixtures.mjs
+          elm-format --yes tests/Fixtures.elm
+          git diff --exit-code -- tests/Fixtures.elm
 
       - name: No port declarations in the package
         run: |
@@ -96,6 +103,11 @@ jobs:
     name: example
     runs-on: ubuntu-latest
     needs: [js]
+    # The Playwright smoke test signs in as one shared Clerk test user, so
+    # two runs at once race each other. Serialize across the whole repo.
+    concurrency:
+      group: clerk-e2e
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
 

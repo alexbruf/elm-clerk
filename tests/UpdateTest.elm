@@ -3,10 +3,10 @@ module UpdateTest exposing (suite)
 import Clerk
 import Clerk.Internal.Protocol as Protocol
 import Expect
+import Fixtures
 import Json.Decode as Decode
 import Json.Encode as Encode
 import Test exposing (Test, describe, test)
-import Time
 
 
 ports : Clerk.Ports ()
@@ -33,11 +33,6 @@ run state raw =
     ( newState, event )
 
 
-signedInJson : String
-signedInJson =
-    """{"status":"signedIn","session":{"id":"sess_1","status":"active","lastActiveAt":1700000000000,"expireAt":1700003600000},"user":{"id":"user_1","primaryEmailAddress":"ada@example.com","firstName":"Ada","lastName":"Lovelace","imageUrl":"i","createdAt":null},"organization":null}"""
-
-
 isError : Clerk.Event -> Bool
 isError event =
     case event of
@@ -59,27 +54,17 @@ suite =
                     |> Expect.equal ( Clerk.SignedOut, Just (Clerk.StateChanged Clerk.SignedOut) )
         , test "a signedIn state carries the resources" <|
             \_ ->
-                run Clerk.Loading ("""{"v":1,"tag":"stateChanged","state":""" ++ signedInJson ++ "}")
+                run Clerk.Loading ("""{"v":1,"tag":"stateChanged","state":""" ++ Fixtures.emptyJson ++ "}")
                     |> Tuple.first
-                    |> Expect.equal
-                        (Clerk.SignedIn
-                            { session =
-                                { id = "sess_1"
-                                , status = "active"
-                                , lastActiveAt = Time.millisToPosix 1700000000000
-                                , expireAt = Time.millisToPosix 1700003600000
-                                }
-                            , user =
-                                { id = "user_1"
-                                , primaryEmailAddress = Just "ada@example.com"
-                                , firstName = Just "Ada"
-                                , lastName = Just "Lovelace"
-                                , imageUrl = "i"
-                                , createdAt = Nothing
-                                }
-                            , organization = Nothing
-                            }
-                        )
+                    |> (\state ->
+                            case state of
+                                Clerk.SignedIn { session, user, organization } ->
+                                    ( session.id, user.id, organization )
+
+                                _ ->
+                                    ( "wrong", "state", Nothing )
+                       )
+                    |> Expect.equal ( "sess_2", "user_2", Nothing )
         , test "tokenReceived passes through without changing the state" <|
             \_ ->
                 run Clerk.SignedOut """{"v":1,"tag":"tokenReceived","requestId":"req-1","token":"jwt"}"""

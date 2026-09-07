@@ -20,6 +20,15 @@ const TEST_OTP = '424242'
 const JWT_RE = /^[\w-]+\.[\w-]+\.[\w-]+$/
 
 test('sign in, get a token, sign out', async ({ page }) => {
+  // Surface Clerk API failures in the test output; they otherwise only show
+  // up as a state that never changes.
+  page.on('response', async (response) => {
+    if (response.status() >= 400 && response.url().includes('clerk')) {
+      const body = await response.text().catch(() => '<unreadable>')
+      console.log(`[clerk ${response.status()}] ${response.url()}\n${body.slice(0, 500)}`)
+    }
+  })
+
   // (a) page loads and boot sends stateChanged -> signedOut
   await page.goto('/')
   await expect(page.getByTestId('state')).toHaveText('signedOut', { timeout: 15_000 })
@@ -42,7 +51,10 @@ test('sign in, get a token, sign out', async ({ page }) => {
     .or(signIn.locator('input[name="codeInput-0"]'))
     .first()
   await expect(otpInput).toBeAttached({ timeout: 15_000 })
-  await otpInput.fill(TEST_OTP)
+  await otpInput.focus()
+  // Type digit by digit: the one-time-code widget listens per keystroke and
+  // auto-submits on the sixth digit; a single fill() can race that.
+  await otpInput.pressSequentially(TEST_OTP, { delay: 50 })
 
   await expect(page.getByTestId('state')).toHaveText('signedIn', { timeout: 15_000 })
   await expect(page.getByTestId('user-email')).toContainText(TEST_EMAIL)

@@ -2,9 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { attachClerk } from '../src/index.js';
 import {
-  CREATED_AT,
-  EXPIRE_AT,
-  LAST_ACTIVE_AT,
   configureNextClerk,
   lastClerk,
   makeOrganization,
@@ -15,7 +12,7 @@ import {
   type FakeResources,
 } from './fakeClerk.js';
 import { makeElmApp, makePortlessApp, type FakeElmApp } from './fakeElmApp.js';
-import { OUTGOING_TAGS, type OutgoingTag } from '../src/protocol.js';
+import { OUTGOING_TAGS, serializeState, type OutgoingTag } from '../src/protocol.js';
 
 vi.mock('@clerk/clerk-js', async () => {
   const module = await import('./fakeClerk.js');
@@ -131,39 +128,12 @@ describe('attachClerk boot', () => {
     expect(app.sent).toEqual([{ v: 1, tag: 'stateChanged', state: { status: 'signedOut' } }]);
   });
 
-  it('sends a fully populated signedIn stateChanged', async () => {
-    const { app } = await attach({
-      session: makeSession(),
-      user: makeUser(),
-      organization: makeOrganization(),
-    });
-
-    expect(app.sent[0]).toEqual({
-      v: 1,
-      tag: 'stateChanged',
-      state: {
-        status: 'signedIn',
-        session: {
-          id: 'sess_1',
-          status: 'active',
-          lastActiveAt: LAST_ACTIVE_AT.getTime(),
-          expireAt: EXPIRE_AT.getTime(),
-        },
-        user: {
-          id: 'user_1',
-          primaryEmailAddress: 'ada@example.com',
-          firstName: 'Ada',
-          lastName: 'Lovelace',
-          imageUrl: 'https://img.clerk.com/user_1',
-          createdAt: CREATED_AT.getTime(),
-        },
-        organization: {
-          id: 'org_1',
-          name: 'ViewEngine',
-          slug: 'viewengine',
-          imageUrl: 'https://img.clerk.com/org_1',
-        },
-      },
+  it('sends a fully populated signedIn stateChanged (serializeState of the resources)', async () => {
+    const resources = { session: makeSession(), user: makeUser(), organization: makeOrganization() };
+    const { app } = await attach(resources);
+    expect(app.sent[0]).toEqual({ v: 1, tag: 'stateChanged', state: serializeState(resources) });
+    expect(app.sent[0]).toMatchObject({
+      state: { status: 'signedIn', user: { primaryEmailAddress: 'ada@example.com' } },
     });
   });
 

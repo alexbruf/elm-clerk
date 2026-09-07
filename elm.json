@@ -3,13 +3,29 @@
     "name": "alexbruf/elm-clerk",
     "summary": "Clerk authentication state, decoders and commands for Elm apps",
     "license": "BSD-3-Clause",
-    "version": "1.0.0",
-    "exposed-modules": [
-        "Clerk",
-        "Clerk.User",
-        "Clerk.Session",
-        "Clerk.Organization"
-    ],
+    "version": "2.0.0",
+    "exposed-modules": {
+        "Core": [
+            "Clerk"
+        ],
+        "Resources": [
+            "Clerk.User",
+            "Clerk.Session",
+            "Clerk.Organization",
+            "Clerk.OrganizationMembership",
+            "Clerk.EmailAddress",
+            "Clerk.PhoneNumber",
+            "Clerk.Web3Wallet",
+            "Clerk.ExternalAccount",
+            "Clerk.EnterpriseAccount",
+            "Clerk.EnterpriseConnection",
+            "Clerk.Passkey",
+            "Clerk.Verification",
+            "Clerk.IdentificationLink",
+            "Clerk.PublicUserData",
+            "Clerk.Actor"
+        ]
+    },
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
         "elm/core": "1.0.0 <= v < 2.0.0",

@@ -3,9 +3,78 @@
   "clerkUiMajor": 1,
   "protocolVersion": 1,
   "resources": {
-    "User": { "fields": ["id", "primaryEmailAddress", "firstName", "lastName", "imageUrl", "createdAt"] },
-    "Session": { "fields": ["id", "status", "lastActiveAt", "expireAt"] },
-    "Organization": { "fields": ["id", "name", "slug", "imageUrl"] }
+    "User": {
+      "fields": [
+        "id", "externalId", "username", "fullName", "firstName", "lastName", "imageUrl", "hasImage",
+        "primaryEmailAddressId", "primaryEmailAddress", "primaryPhoneNumberId", "primaryPhoneNumber",
+        "primaryWeb3WalletId", "primaryWeb3Wallet",
+        "emailAddresses", "phoneNumbers", "web3Wallets", "externalAccounts", "enterpriseAccounts",
+        "passkeys", "organizationMemberships",
+        "passwordEnabled", "totpEnabled", "backupCodeEnabled", "twoFactorEnabled",
+        "publicMetadata", "unsafeMetadata",
+        "lastSignInAt", "legalAcceptedAt", "createdAt", "updatedAt"
+      ]
+    },
+    "Session": {
+      "fields": [
+        "id", "status", "expireAt", "abandonAt", "lastActiveAt", "createdAt", "updatedAt",
+        "factorVerificationAge", "lastActiveOrganizationId", "actor", "tasks", "currentTask",
+        "publicUserData"
+      ]
+    },
+    "Organization": {
+      "fields": [
+        "id", "name", "slug", "imageUrl", "hasImage", "membersCount", "pendingInvitationsCount",
+        "publicMetadata", "adminDeleteEnabled", "maxAllowedMemberships", "selfServeSSOEnabled",
+        "exclusiveMembership", "createdAt", "updatedAt"
+      ]
+    },
+    "OrganizationMembership": {
+      "fields": ["id", "organization", "permissions", "publicMetadata", "publicUserData", "role", "roleName", "createdAt", "updatedAt"]
+    },
+    "EmailAddress": {
+      "fields": ["id", "emailAddress", "verification", "matchesSsoConnection", "linkedTo"]
+    },
+    "PhoneNumber": {
+      "fields": ["id", "phoneNumber", "verification", "reservedForSecondFactor", "defaultSecondFactor", "linkedTo", "backupCodes"]
+    },
+    "Web3Wallet": {
+      "fields": ["id", "web3Wallet", "verification"]
+    },
+    "ExternalAccount": {
+      "fields": [
+        "id", "identificationId", "provider", "providerUserId", "emailAddress", "approvedScopes",
+        "firstName", "lastName", "imageUrl", "username", "phoneNumber", "label", "publicMetadata", "verification"
+      ]
+    },
+    "EnterpriseAccount": {
+      "fields": [
+        "id", "active", "emailAddress", "enterpriseConnectionId", "enterpriseConnection", "firstName", "lastName",
+        "protocol", "provider", "providerUserId", "publicMetadata", "verification", "lastAuthenticatedAt"
+      ]
+    },
+    "EnterpriseConnection": {
+      "fields": [
+        "id", "active", "allowIdpInitiated", "allowSubdomains", "disableAdditionalIdentifications", "domain",
+        "logoPublicUrl", "name", "protocol", "provider", "syncUserAttributes", "allowOrganizationAccountLinking",
+        "enterpriseConnectionId"
+      ]
+    },
+    "Passkey": {
+      "fields": ["id", "name", "lastUsedAt", "verification"]
+    },
+    "Verification": {
+      "fields": ["status", "strategy", "expireAt", "error", "message", "nonce", "externalVerificationRedirectURL", "verifiedAtClient"]
+    },
+    "IdentificationLink": {
+      "fields": ["id", "type"]
+    },
+    "PublicUserData": {
+      "fields": ["firstName", "lastName", "imageUrl", "hasImage", "identifier", "userId", "username", "banned", "deprovisioned"]
+    },
+    "Actor": {
+      "fields": ["sub", "type"]
+    }
   },
   "methods": {
     "implemented": [
@@ -35,6 +104,11 @@
   },
   "notes": {
     "redirectToSignIn": "Full-page redirects bypass the Elm runtime; consumers use openSignIn or mountSignIn instead.",
-    "handleRedirectCallback": "ClerkJS handles the OAuth callback internally on load; no Elm-side surface needed."
+    "handleRedirectCallback": "ClerkJS handles the OAuth callback internally on load; no Elm-side surface needed.",
+    "Session.lastActiveToken": "Not serialized (SPEC section 13 decision): tokens travel only through requestToken round-trips.",
+    "Session.user": "Not serialized inside Session; the same user is the sibling `user` field of the signedIn state.",
+    "Session.agent": "AgentActClaim has no exported typing in @clerk/shared 6.31; revisit when it does.",
+    "Passkey.verification.publicKey": "WebAuthn PublicKeyCredentialCreationOptions is browser-only; not serialized.",
+    "Verification.error": "Serialized as the ClerkAPIError message string, not the full error object."
   }
 }

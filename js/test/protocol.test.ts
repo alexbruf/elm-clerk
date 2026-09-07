@@ -12,9 +12,6 @@ import {
   tokenReceived,
 } from '../src/protocol.js';
 import {
-  CREATED_AT,
-  EXPIRE_AT,
-  LAST_ACTIVE_AT,
   makeOrganization,
   makeSession,
   makeUser,
@@ -55,49 +52,6 @@ describe('serializeState', () => {
 
   it('returns signedOut for a freshly loaded anonymous Clerk', () => {
     expect(serializeState({})).toEqual({ status: 'signedOut' });
-  });
-
-  it('serializes exactly the coverage.json fields when signed in', () => {
-    const state = serializeState({
-      session: makeSession(),
-      user: makeUser(),
-      organization: makeOrganization(),
-    });
-
-    expect(state).toEqual({
-      status: 'signedIn',
-      session: {
-        id: 'sess_1',
-        status: 'active',
-        lastActiveAt: LAST_ACTIVE_AT.getTime(),
-        expireAt: EXPIRE_AT.getTime(),
-      },
-      user: {
-        id: 'user_1',
-        primaryEmailAddress: 'ada@example.com',
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        imageUrl: 'https://img.clerk.com/user_1',
-        createdAt: CREATED_AT.getTime(),
-      },
-      organization: {
-        id: 'org_1',
-        name: 'ViewEngine',
-        slug: 'viewengine',
-        imageUrl: 'https://img.clerk.com/org_1',
-      },
-    });
-
-    if (state.status !== 'signedIn') throw new Error('unreachable');
-    expect(Object.keys(state.session).sort()).toEqual(
-      ['expireAt', 'id', 'lastActiveAt', 'status'].sort(),
-    );
-    expect(Object.keys(state.user).sort()).toEqual(
-      ['createdAt', 'firstName', 'id', 'imageUrl', 'lastName', 'primaryEmailAddress'].sort(),
-    );
-    expect(Object.keys(state.organization ?? {}).sort()).toEqual(
-      ['id', 'imageUrl', 'name', 'slug'].sort(),
-    );
   });
 
   it('nulls the organization when there is none', () => {

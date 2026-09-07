@@ -1,6 +1,6 @@
 {
   "name": "@viewengine/elm-clerk",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "ClerkJS shim for Elm apps: bridges @clerk/clerk-js to two Elm ports.",
   "type": "module",
   "main": "./dist/index.js",

@@ -23,7 +23,10 @@ elm-format --validate src tests && elm-review && elm-test
 cd js && bun run build && bun run test        # vitest, clerk-js mocked at module boundary
 cd example && bun run build && bun run test:e2e   # elm make --optimize + Playwright (needs CLERK_PUBLISHABLE_KEY)
 node scripts/check-coverage.mjs
+node scripts/gen-fixtures.mjs && elm-format --yes tests/Fixtures.elm   # after editing fixtures/*.json
 ```
+
+`fixtures/full.json` and `fixtures/empty.json` are the shared resource contract: the JS tests assert `serializeState` produces them byte-for-byte, and the Elm tests decode them (embedded in the generated `tests/Fixtures.elm`; CI fails if it drifts). Change a field: update `coverage.json`, both fixtures, the Elm record, the JS serializer, then regenerate.
 
 Env vars live in `.env` (never committed). See `.env.example`.
 
@@ -63,16 +66,76 @@ JS -> Elm (port `clerkIn`):
 { "status": "signedIn", "session": Session, "user": User, "organization": Organization | null }
 ```
 
-Resources (fields are exactly those in `coverage.json`; timestamps are epoch milliseconds, decoded to `Time.Posix`):
+Resources. Field names and order are exactly those in `coverage.json` (one Elm module `src/Clerk/<Name>.elm` per resource, record alias `<Name>`, plus `decoder`). Conventions:
+
+- Timestamps are epoch milliseconds (`number`), `null` when ClerkJS has `null`; Elm decodes to `Time.Posix` / `Maybe Time.Posix`.
+- `string | null` -> `Maybe String`. Booleans that ClerkJS marks optional (`banned?`) are serialized as `false` when absent.
+- Metadata objects (`publicMetadata`, `unsafeMetadata`) are passed through untouched as JSON objects; Elm keeps them as `Json.Decode.Value` (empty object when ClerkJS has null/undefined).
+- Nested resources are serialized recursively with the same rules; lists are JSON arrays (`[]` when ClerkJS has null).
+- JSON key `type` maps to Elm field `type_` (reserved word). `check-coverage.mjs` knows this one rename.
+- Anything not listed is not serialized; see `coverage.json.notes` for deliberate exclusions (`Session.lastActiveToken`, `Session.user`, `Session.agent`, passkey `publicKey`).
 
 ```json
-User:         { "id": string, "primaryEmailAddress": string | null, "firstName": string | null,
-                "lastName": string | null, "imageUrl": string, "createdAt": number | null }
-Session:      { "id": string, "status": string, "lastActiveAt": number, "expireAt": number }
-Organization: { "id": string, "name": string, "slug": string | null, "imageUrl": string }
-```
+User: { "id": string, "externalId": string|null, "username": string|null, "fullName": string|null,
+        "firstName": string|null, "lastName": string|null, "imageUrl": string, "hasImage": bool,
+        "primaryEmailAddressId": string|null, "primaryEmailAddress": string|null,   // the address string
+        "primaryPhoneNumberId": string|null, "primaryPhoneNumber": string|null,     // the number string
+        "primaryWeb3WalletId": string|null, "primaryWeb3Wallet": string|null,       // the wallet string
+        "emailAddresses": [EmailAddress], "phoneNumbers": [PhoneNumber], "web3Wallets": [Web3Wallet],
+        "externalAccounts": [ExternalAccount], "enterpriseAccounts": [EnterpriseAccount],
+        "passkeys": [Passkey], "organizationMemberships": [OrganizationMembership],
+        "passwordEnabled": bool, "totpEnabled": bool, "backupCodeEnabled": bool, "twoFactorEnabled": bool,
+        "publicMetadata": object, "unsafeMetadata": object,
+        "lastSignInAt": ms|null, "legalAcceptedAt": ms|null, "createdAt": ms|null, "updatedAt": ms|null }
 
-`primaryEmailAddress` is the email string (`user.primaryEmailAddress?.emailAddress`), not the ClerkJS resource object.
+Session: { "id": string, "status": string, "expireAt": ms, "abandonAt": ms, "lastActiveAt": ms,
+           "createdAt": ms, "updatedAt": ms,
+           "factorVerificationAge": { "firstFactorAge": int, "secondFactorAge": int } | null,
+           "lastActiveOrganizationId": string|null, "actor": Actor|null,
+           "tasks": [string],                  // task keys, [] when null
+           "currentTask": string|null,          // task key
+           "publicUserData": PublicUserData }
+
+Organization: { "id": string, "name": string, "slug": string|null, "imageUrl": string, "hasImage": bool,
+                "membersCount": int, "pendingInvitationsCount": int, "publicMetadata": object,
+                "adminDeleteEnabled": bool, "maxAllowedMemberships": int, "selfServeSSOEnabled": bool,
+                "exclusiveMembership": bool, "createdAt": ms, "updatedAt": ms }
+
+OrganizationMembership: { "id": string, "organization": Organization, "permissions": [string],
+                          "publicMetadata": object, "publicUserData": PublicUserData|null,
+                          "role": string, "roleName": string, "createdAt": ms, "updatedAt": ms }
+
+EmailAddress: { "id": string, "emailAddress": string, "verification": Verification,
+                "matchesSsoConnection": bool, "linkedTo": [IdentificationLink] }
+PhoneNumber:  { "id": string, "phoneNumber": string, "verification": Verification,
+                "reservedForSecondFactor": bool, "defaultSecondFactor": bool,
+                "linkedTo": [IdentificationLink], "backupCodes": [string] }   // [] when absent
+Web3Wallet:   { "id": string, "web3Wallet": string, "verification": Verification }
+ExternalAccount: { "id": string, "identificationId": string, "provider": string, "providerUserId": string,
+                   "emailAddress": string, "approvedScopes": string, "firstName": string, "lastName": string,
+                   "imageUrl": string, "username": string|null, "phoneNumber": string|null, "label": string|null,
+                   "publicMetadata": object, "verification": Verification|null }
+EnterpriseAccount: { "id": string|null, "active": bool, "emailAddress": string,
+                     "enterpriseConnectionId": string|null, "enterpriseConnection": EnterpriseConnection|null,
+                     "firstName": string|null, "lastName": string|null, "protocol": string, "provider": string,
+                     "providerUserId": string|null, "publicMetadata": object, "verification": Verification|null,
+                     "lastAuthenticatedAt": ms|null }
+EnterpriseConnection: { "id": string|null, "active": bool, "allowIdpInitiated": bool, "allowSubdomains": bool,
+                        "disableAdditionalIdentifications": bool, "domain": string, "logoPublicUrl": string|null,
+                        "name": string, "protocol": string, "provider": string, "syncUserAttributes": bool,
+                        "allowOrganizationAccountLinking": bool, "enterpriseConnectionId": string|null }
+Passkey:      { "id": string, "name": string|null, "lastUsedAt": ms|null, "verification": Verification|null }
+Verification: { "status": string|null, "strategy": string|null, "expireAt": ms|null,
+                "error": string|null,                          // ClerkAPIError.message
+                "message": string|null, "nonce": string|null,
+                "externalVerificationRedirectURL": string|null,  // URL.toString()
+                "verifiedAtClient": string|null }
+IdentificationLink: { "id": string, "type": string }            // Elm field: type_
+PublicUserData: { "firstName": string|null, "lastName": string|null, "imageUrl": string, "hasImage": bool,
+                  "identifier": string, "userId": string|null, "username": string|null,
+                  "banned": bool, "deprovisioned": bool }
+Actor: { "sub": string, "type": string|null }                    // Elm field: type_
+```
 
 ## Rules
 
