@@ -240,6 +240,12 @@ Dependabot branch and comments a link back on the Dependabot PR. It never
 merges anything; branch protection requires CI green plus one human review
 on `clerk-sync` PRs.
 
+Repository prerequisites for the agent (secrets `COPILOT_GITHUB_TOKEN` and
+`GH_AW_CI_TRIGGER_TOKEN`, the Actions setting that lets workflows open pull
+requests, and the three labels) are listed in `CLAUDE.md`. A synthetic test
+is one PR bumping `js/package.json` with the `clerk-bump` label; the agent
+answers with a draft `clerk-sync` PR that gets its own CI run.
+
 ## Release and version policy
 
 Both packages move together and share one version number. `release.yml`

@@ -159,6 +159,14 @@ Actor: { "sub": string, "type": string|null }                    // Elm field: t
 - The Elm package lives at the repo root, not in `elm/` as SPEC section 3 shows: `elm publish` downloads the tagged GitHub archive and requires `elm.json` at its root, so a subdirectory package cannot be published.
 - `clerk-sync.md` deviates from SPEC section 10 where gh-aw or the first live run demanded it: `web-fetch: {}` (v0.88 rejects the boolean), `bash: [":*"]` (the [git, node, npm, elm] allowlist denied pipes/curl and burned the budget), `max-turns: 150` and `timeout-minutes: 45`, plus the `clerk-bump` label as an alternative trigger for synthetic PRs. Recompile with `gh aw compile` after editing it and commit the lock file.
 
+## GitHub repository setup the automation depends on
+
+- Secrets: `CLERK_PUBLISHABLE_KEY` (e2e), `COPILOT_GITHUB_TOKEN` (fine-grained PAT with Copilot Requests, runs the clerk-sync agent), `GH_AW_CI_TRIGGER_TOKEN` (fine-grained PAT, Contents + Pull requests + Workflows read/write on this repo; gh-aw uses it to push and open the sync PR so CI runs on it. PRs opened with the built-in token never trigger workflows).
+- Actions setting "Allow GitHub Actions to create and approve pull requests" must be on (set via `PUT /repos/{owner}/{repo}/actions/permissions/workflow`, `can_approve_pull_request_reviews: true`).
+- npm trusted publisher for `@viewengine/elm-clerk`: repository `alexbruf/elm-clerk`, workflow `release.yml`.
+- Labels: `clerk-bump` (Dependabot applies it; also the manual trigger for synthetic PRs), `clerk-sync`, `needs-review`.
+- Sandbox limits the agent lives with: the `elm` binary cannot reach `package.elm-lang.org` through the gh-aw proxy, so `elm-test`/`elm-review` are left to the CI run on the sync PR.
+
 ## Local e2e
 
 `example/e2e/smoke.spec.ts` needs a real dev-instance key in `.env` and a Clerk user `smoke+clerk_test@example.com` on that instance (Clerk test mode accepts OTP `424242` for `+clerk_test` addresses). The instance must allow email-code sign-in without a required password. The Clerk CLI is linked to that app; `clerk config pull` shows the settings.
