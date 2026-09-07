@@ -17,6 +17,8 @@ safe-outputs:
   create-pull-request:
     labels: [clerk-sync, needs-review]
     draft: true
+    # The sync PR targets the Dependabot branch (or a synthetic sync-test-* one).
+    allowed-base-branches: ["dependabot/*", "sync-test-*"]
   add-comment: {}
 timeout-minutes: 45
 max-turns: 150
@@ -99,7 +101,14 @@ GitHub search calls.
    `elm-review`, and `elm-test` at the repo root; `typecheck`, `build`, and `test`
    in `js/`; and both `node scripts/check-coverage.mjs` and
    `node scripts/check-readme.mjs` from the repo root. Do not proceed to
-   open a pull request that fails any of these.
+   open a pull request that fails any of these. Known sandbox limit: the
+   `elm` binary cannot reach `package.elm-lang.org` through the firewall
+   proxy, so `elm-test`/`elm-review` may fail with a connection error even
+   though the domain is allowed. Do not spend budget working around that;
+   run everything else, state clearly in the PR body which Elm checks could
+   not run, and rely on the repository CI (which runs on the PR) for them.
+   Never edit `js/package.json` (Dependabot owns that diff) or `README.md`;
+   both are protected files for this workflow.
 
 7. **Open one draft pull request.** Title it `clerk-sync: <old> -> <new>`
    (the old and new `@clerk/clerk-js` versions from step 1), target the
