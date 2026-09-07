@@ -5,7 +5,7 @@ Clerk authentication for Elm apps, bridged through ClerkJS over two ports. One r
 ## Layout
 
 ```
-elm/        Elm package `alexbruf/elm-clerk` (elm.json type: package). NO port declarations allowed here.
+elm.json, src/, tests/, review/   Elm package `alexbruf/elm-clerk` at the REPO ROOT (the Elm registry needs elm.json at the archive root). NO port declarations under src/.
 js/         npm package `@viewengine/elm-clerk`. The ONLY code that imports @clerk/clerk-js. src/index.ts < 200 lines; growth goes to src/protocol.ts.
 example/    Browser.application consumer built in CI. src/Ports.elm is the canonical copy consumers paste.
 scripts/    check-coverage.mjs (CI gate: coverage.json must agree with Elm exports + shim dispatch table).
@@ -19,7 +19,7 @@ Use `bun` / `bunx`, never npm/npx. Root is a bun workspace (`js`, `example`).
 
 ```
 bun install                                   # all workspaces
-cd elm && elm-format --validate src tests && elm-review && elm-test
+elm-format --validate src tests && elm-review && elm-test
 cd js && bun run build && bun run test        # vitest, clerk-js mocked at module boundary
 cd example && bun run build && bun run test:e2e   # elm make --optimize + Playwright (needs CLERK_PUBLISHABLE_KEY)
 node scripts/check-coverage.mjs
@@ -27,7 +27,7 @@ node scripts/check-coverage.mjs
 
 Env vars live in `.env` (never committed). See `.env.example`.
 
-## Wire protocol (v1): the contract between elm/ and js/
+## Wire protocol (v1): the contract between src/ (Elm) and js/
 
 Every message in both directions is one JSON object `{ "v": 1, "tag": "<tag>", ...payload }`.
 Unknown tags never crash: Elm decodes them to `Error`, JS replies with an `error` message.
@@ -82,7 +82,7 @@ Organization: { "id": string, "name": string, "slug": string | null, "imageUrl":
 - The shim never throws into the Elm runtime; every failure becomes an `error` message.
 - Adding a tag or field: update `coverage.json`, Elm types/decoders, shim dispatch, tests in both packages. CI checks all four agree.
 - Any change to the `v` field is a major release of both packages. A Clerk minor bump with no protocol change is a patch.
-- Both packages share one version. `release.yml` verifies `elm/elm.json`, `js/package.json`, and the git tag agree.
+- Both packages share one version. `release.yml` verifies `elm.json`, `js/package.json`, and the git tag agree.
 - Never commit `.env`. Clerk publishable keys for CI come from the `CLERK_PUBLISHABLE_KEY` repo secret.
 
 ## Decisions recorded (SPEC section 13)
@@ -93,6 +93,7 @@ Organization: { "id": string, "name": string, "slug": string | null, "imageUrl":
 - Target ClerkJS is the 6.x line (`^6.31.0` at bootstrap); `coverage.json.clerkJsVersion` tracks the pinned version.
 - ClerkJS 6 ships no UI; `mountSignIn` etc. need `clerk.load({ ui: { ClerkUI } })`. `@clerk/ui` on npm needs React peers, so the shim (`js/src/ui.ts`) injects `https://<frontend-api>/npm/@clerk/ui@<major>/dist/ui.browser.js` (host decoded from the publishable key, per Clerk's JS quickstart) and reads `window.__internal_ClerkUICtor`. `attachClerk` option `ui: 'cdn' | 'none'` (default `'cdn'`); a consumer-supplied `clerkOptions.ui.ClerkUI` wins. `coverage.json.clerkUiMajor` tracks the requested major.
 - The listener is registered with `skipInitialEmit: true`; the shim sends the first `stateChanged` itself so boot produces exactly one.
+- The Elm package lives at the repo root, not in `elm/` as SPEC section 3 shows: `elm publish` downloads the tagged GitHub archive and requires `elm.json` at its root, so a subdirectory package cannot be published.
 - `clerk-sync.md` uses `web-fetch: {}` rather than SPEC's `web-fetch: true`; gh-aw v0.88 rejects the boolean form. Recompile with `gh aw compile` after editing it and commit the lock file.
 
 ## Local e2e

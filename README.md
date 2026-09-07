@@ -190,10 +190,10 @@ or `methods.wontImplement`; `wontImplement` entries carry a reason in the
 sibling `notes` object; `bindings` maps each implemented method to its Elm
 function name and its wire `tag`.
 
-`scripts/check-coverage.mjs` (no dependencies) parses `elm/src/Clerk.elm`'s
+`scripts/check-coverage.mjs` (no dependencies) parses `src/Clerk.elm`'s
 exposing list, `js/src/protocol.ts`'s `OUTGOING_TAGS` tuple, `js/src/index.ts`'s
 `handlers` dispatch table, and the Elm resource record fields in
-`elm/src/Clerk/{User,Session,Organization}.elm`, then checks all of it
+`src/Clerk/{User,Session,Organization}.elm`, then checks all of it
 against `coverage.json`. It also checks that `coverage.json`'s
 `clerkJsVersion` is inside the caret range pinned in `js/package.json`.
 CI runs it (see `.github/workflows/ci.yml`) and fails the build on any
@@ -230,9 +230,9 @@ on `clerk-sync` PRs.
 
 Both packages move together and share one version number. `release.yml`
 runs on any pushed tag matching `v*.*.*`, verifies that tag is on `main`,
-verifies `elm/elm.json`'s version, `js/package.json`'s version, and the tag
+verifies `elm.json`'s version, `js/package.json`'s version, and the tag
 itself all agree, mirrors the tag as a bare `X.Y.Z` tag on the same commit
-(the Elm registry looks for that form), then runs `elm publish` from `elm/`, `npm publish --access
+(the Elm registry looks for that form), then runs `elm publish` from the repo root, `npm publish --access
 public` from `js/` using npm trusted publishing (OIDC, no token secret, and
 provenance is attached automatically; `bun publish` has no OIDC support yet,
 so this one step uses npm), and attaches `coverage.json` to the GitHub

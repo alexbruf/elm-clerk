@@ -30,29 +30,26 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            elm/elm-stuff
+            elm-stuff
             example/elm-stuff
             ~/.elm
-          key: ${{ runner.os }}-elm-${{ hashFiles('elm/elm.json', 'example/elm.json') }}
+          key: ${{ runner.os }}-elm-${{ hashFiles('elm.json', 'example/elm.json') }}
           restore-keys: |
             ${{ runner.os }}-elm-
 
       - name: elm-format --validate
-        working-directory: elm
         run: elm-format --validate src tests
 
       - name: elm-review
-        working-directory: elm
         run: elm-review
 
       - name: elm-test
-        working-directory: elm
         run: elm-test
 
       - name: No port declarations in the package
         run: |
-          if grep -rn '^port ' elm/src; then
-            echo "::error::port declarations are forbidden under elm/src (Elm package registry rejects them)"
+          if grep -rn '^port ' src; then
+            echo "::error::port declarations are forbidden under src/ (Elm package registry rejects them)"
             exit 1
           fi
 
@@ -117,10 +114,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            elm/elm-stuff
+            elm-stuff
             example/elm-stuff
             ~/.elm
-          key: ${{ runner.os }}-elm-${{ hashFiles('elm/elm.json', 'example/elm.json') }}
+          key: ${{ runner.os }}-elm-${{ hashFiles('elm.json', 'example/elm.json') }}
           restore-keys: |
             ${{ runner.os }}-elm-
 

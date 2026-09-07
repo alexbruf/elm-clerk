@@ -24,7 +24,7 @@ max-turns: 60
 
 You are responding to a Dependabot pull request that bumps `@clerk/clerk-js`
 in `js/package.json`. Your job is to keep `elm-clerk` (the Elm package under
-`elm/`) and `@viewengine/elm-clerk` (the npm shim under `js/`) working
+the repo root: `elm.json`, `src/`, `tests/`) and `@viewengine/elm-clerk` (the npm shim under `js/`) working
 against the new ClerkJS version, and to keep `coverage.json` at the repo
 root, the single source of truth for what this library implements, in
 agreement with the code. Follow these steps in order.
@@ -55,11 +55,11 @@ agreement with the code. Follow these steps in order.
 
 4. **Fix removed or changed surface. This is required, not optional.** For
    anything in the "changed" or "removed" list from step 3, update the Elm
-   types and decoders (`elm/src/Clerk.elm`, `elm/src/Clerk/User.elm`,
-   `elm/src/Clerk/Session.elm`, `elm/src/Clerk/Organization.elm`), the
+   types and decoders (`src/Clerk.elm`, `src/Clerk/User.elm`,
+   `src/Clerk/Session.elm`, `src/Clerk/Organization.elm`), the
    shim's dispatch table (`js/src/index.ts`'s `handlers`, and
    `js/src/protocol.ts`'s `OUTGOING_TAGS` if a tag itself needs to change),
-   the tests in both `elm/tests/` and `js/test/`, and `coverage.json`
+   the tests in both `tests/` and `js/test/`, and `coverage.json`
    itself (fields, method lists, `bindings`, `notes`, and
    `clerkJsVersion`), so that the full CI suite passes against the new
    ClerkJS version. A PR that leaves any of this broken is not acceptable.
@@ -78,7 +78,7 @@ agreement with the code. Follow these steps in order.
 6. **Run the full CI suite locally before doing anything else.** Using the
    `bash` tools available to you (`git`, `node`, `npm`, `elm`), run the same
    checks `.github/workflows/ci.yml` runs: `elm-format --validate`,
-   `elm-review`, and `elm-test` in `elm/`; `typecheck`, `build`, and `test`
+   `elm-review`, and `elm-test` at the repo root; `typecheck`, `build`, and `test`
    in `js/`; and both `node scripts/check-coverage.mjs` and
    `node scripts/check-readme.mjs` from the repo root. Do not proceed to
    open a pull request that fails any of these.

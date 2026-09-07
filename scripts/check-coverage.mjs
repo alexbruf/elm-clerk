@@ -218,20 +218,20 @@ if (!coverageRaw) {
 }
 const coverage = JSON.parse(coverageRaw)
 
-const clerkElmSource = readMaybe('elm/src/Clerk.elm')
+const clerkElmSource = readMaybe('src/Clerk.elm')
 const protocolTsSource = readMaybe('js/src/protocol.ts')
 const indexTsSource = readMaybe('js/src/index.ts')
 const jsPackageRaw = readMaybe('js/package.json')
 
 const resourceFiles = {
-  User: 'elm/src/Clerk/User.elm',
-  Session: 'elm/src/Clerk/Session.elm',
-  Organization: 'elm/src/Clerk/Organization.elm',
+  User: 'src/Clerk/User.elm',
+  Session: 'src/Clerk/Session.elm',
+  Organization: 'src/Clerk/Organization.elm',
 }
 
 let missingSource = false
 for (const [label, src] of [
-  ['elm/src/Clerk.elm', clerkElmSource],
+  ['src/Clerk.elm', clerkElmSource],
   ['js/src/protocol.ts', protocolTsSource],
   ['js/src/index.ts', indexTsSource],
   ['js/package.json', jsPackageRaw],
@@ -259,7 +259,7 @@ if (missingSource) {
 
 const exposedByClerkElm = new Set(parseElmExposing(clerkElmSource, 'Clerk') ?? [])
 if (exposedByClerkElm.size === 0) {
-  fail('could not parse `module Clerk exposing (...)` from elm/src/Clerk.elm')
+  fail('could not parse `module Clerk exposing (...)` from src/Clerk.elm')
 }
 
 const outgoingTags = new Set(parseOutgoingTags(protocolTsSource) ?? [])
@@ -330,7 +330,7 @@ for (const method of implemented) {
   if (!binding.elm || !exposedByClerkElm.has(binding.elm)) {
     fail(
       `bindings.${method}.elm ("${binding.elm}") is not exposed by ` +
-        `\`module Clerk exposing (...)\` in elm/src/Clerk.elm`
+        `\`module Clerk exposing (...)\` in src/Clerk.elm`
     )
     bindingsOk = false
   }

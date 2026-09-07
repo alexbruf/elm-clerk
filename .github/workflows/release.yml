@@ -41,13 +41,13 @@ jobs:
       - name: Verify versions agree with the tag
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
-          ELM_VERSION=$(node -p "require('./elm/elm.json').version")
+          ELM_VERSION=$(node -p "require('./elm.json').version")
           JS_VERSION=$(node -p "require('./js/package.json').version")
 
-          echo "tag: ${TAG_VERSION}, elm/elm.json: ${ELM_VERSION}, js/package.json: ${JS_VERSION}"
+          echo "tag: ${TAG_VERSION}, elm.json: ${ELM_VERSION}, js/package.json: ${JS_VERSION}"
 
           if [ "${TAG_VERSION}" != "${ELM_VERSION}" ] || [ "${TAG_VERSION}" != "${JS_VERSION}" ]; then
-            echo "::error::version mismatch: tag=${TAG_VERSION} elm/elm.json=${ELM_VERSION} js/package.json=${JS_VERSION}"
+            echo "::error::version mismatch: tag=${TAG_VERSION} elm.json=${ELM_VERSION} js/package.json=${JS_VERSION}"
             exit 1
           fi
 
@@ -67,7 +67,6 @@ jobs:
           git push -f origin "refs/tags/${BARE}"
 
       - name: elm publish
-        working-directory: elm
         run: elm publish
         env:
           # elm publish needs the tag to already exist on origin, which the
