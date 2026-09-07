@@ -41,7 +41,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@clerk/clerk-js": "^6.31.0"
+    "@clerk/clerk-js": "^6.30.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
