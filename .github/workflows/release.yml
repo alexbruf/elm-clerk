@@ -62,7 +62,8 @@ jobs:
       - name: Mirror vX.Y.Z tag as X.Y.Z for the Elm registry
         run: |
           BARE="${GITHUB_REF_NAME#v}"
-          git tag -f -a "${BARE}" "${GITHUB_SHA}" -m "elm-clerk ${BARE}"
+          # Lightweight tag: no committer identity needed on the runner.
+          git tag -f "${BARE}" "${GITHUB_SHA}"
           git push -f origin "refs/tags/${BARE}"
 
       - name: elm publish
