@@ -19,7 +19,7 @@
     },
     "js": {
       "name": "@viewengine/elm-clerk",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "dependencies": {
         "@clerk/clerk-js": "^6.31.0",
       },
