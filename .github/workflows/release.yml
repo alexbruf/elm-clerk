@@ -36,7 +36,7 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install elm toolchain
-        run: bun add -g elm
+        run: bun add -g elm@0.19.1-6
 
       - name: Verify versions agree with the tag
         run: |
