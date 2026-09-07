@@ -231,7 +231,8 @@ on `clerk-sync` PRs.
 Both packages move together and share one version number. `release.yml`
 runs on any pushed tag matching `v*.*.*`, verifies that tag is on `main`,
 verifies `elm/elm.json`'s version, `js/package.json`'s version, and the tag
-itself all agree, then runs `elm publish` from `elm/`, `npm publish --access
+itself all agree, mirrors the tag as a bare `X.Y.Z` tag on the same commit
+(the Elm registry looks for that form), then runs `elm publish` from `elm/`, `npm publish --access
 public` from `js/` using npm trusted publishing (OIDC, no token secret, and
 provenance is attached automatically; `bun publish` has no OIDC support yet,
 so this one step uses npm), and attaches `coverage.json` to the GitHub

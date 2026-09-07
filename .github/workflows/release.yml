@@ -57,6 +57,14 @@ jobs:
       - name: Build js shim
         run: bun run --cwd js build
 
+      # `elm publish` looks for a bare `X.Y.Z` tag on GitHub, while this
+      # workflow triggers on `vX.Y.Z`. Mirror the tag onto the same commit.
+      - name: Mirror vX.Y.Z tag as X.Y.Z for the Elm registry
+        run: |
+          BARE="${GITHUB_REF_NAME#v}"
+          git tag -f -a "${BARE}" "${GITHUB_SHA}" -m "elm-clerk ${BARE}"
+          git push -f origin "refs/tags/${BARE}"
+
       - name: elm publish
         working-directory: elm
         run: elm publish
