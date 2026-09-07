@@ -1,0 +1,40 @@
+{
+  "clerkJsVersion": "6.31.0",
+  "clerkUiMajor": 1,
+  "protocolVersion": 1,
+  "resources": {
+    "User": { "fields": ["id", "primaryEmailAddress", "firstName", "lastName", "imageUrl", "createdAt"] },
+    "Session": { "fields": ["id", "status", "lastActiveAt", "expireAt"] },
+    "Organization": { "fields": ["id", "name", "slug", "imageUrl"] }
+  },
+  "methods": {
+    "implemented": [
+      "signOut",
+      "openSignIn",
+      "openSignUp",
+      "openUserProfile",
+      "mountSignIn",
+      "mountUserButton",
+      "unmount",
+      "session.getToken",
+      "setActive"
+    ],
+    "deferred": [],
+    "wontImplement": ["redirectToSignIn", "handleRedirectCallback"]
+  },
+  "bindings": {
+    "signOut": { "elm": "signOut", "tag": "signOut" },
+    "openSignIn": { "elm": "openSignIn", "tag": "openSignIn" },
+    "openSignUp": { "elm": "openSignUp", "tag": "openSignUp" },
+    "openUserProfile": { "elm": "openUserProfile", "tag": "openUserProfile" },
+    "mountSignIn": { "elm": "mountSignIn", "tag": "mountSignIn" },
+    "mountUserButton": { "elm": "mountUserButton", "tag": "mountUserButton" },
+    "unmount": { "elm": "unmount", "tag": "unmount" },
+    "session.getToken": { "elm": "requestToken", "tag": "requestToken" },
+    "setActive": { "elm": "setActiveOrganization", "tag": "setActiveOrganization" }
+  },
+  "notes": {
+    "redirectToSignIn": "Full-page redirects bypass the Elm runtime; consumers use openSignIn or mountSignIn instead.",
+    "handleRedirectCallback": "ClerkJS handles the OAuth callback internally on load; no Elm-side surface needed."
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "elm-clerk-monorepo",
+  "private": true,
+  "workspaces": ["js", "example"],
+  "scripts": {
+    "check-coverage": "node scripts/check-coverage.mjs"
+  }
+}

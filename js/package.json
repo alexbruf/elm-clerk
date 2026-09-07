@@ -1,0 +1,52 @@
+{
+  "name": "@viewengine/elm-clerk",
+  "version": "1.0.0",
+  "description": "ClerkJS shim for Elm apps: bridges @clerk/clerk-js to two Elm ports.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexbruf/elm-clerk.git",
+    "directory": "js"
+  },
+  "homepage": "https://github.com/alexbruf/elm-clerk#readme",
+  "bugs": {
+    "url": "https://github.com/alexbruf/elm-clerk/issues"
+  },
+  "keywords": [
+    "elm",
+    "clerk",
+    "auth",
+    "ports"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clerk/clerk-js": "^6.31.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "jsdom": "^26.1.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "elm-clerk-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "elm make --optimize src/Main.elm --output=/dev/null && vite build",
+    "preview": "vite preview",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@viewengine/elm-clerk": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0",
+    "typescript": "^5.9.2",
+    "vite": "^5.4.0",
+    "vite-plugin-elm": "^3.0.1"
+  }
+}
