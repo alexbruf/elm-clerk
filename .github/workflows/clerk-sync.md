@@ -22,7 +22,7 @@ safe-outputs:
     # The default protected list includes package.json, and the sync PR sits on
     # top of Dependabot's package.json bump, so the third live run fell back to
     # an issue. Drafts + required human review already gate these PRs.
-    protected-files: allow
+    protected-files: allowed
   add-comment: {}
 timeout-minutes: 45
 max-turns: 150
