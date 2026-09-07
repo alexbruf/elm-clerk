@@ -24,7 +24,7 @@ jobs:
           bun-version: latest
 
       - name: Install elm toolchain
-        run: bun add -g elm@0.19.1-6 elm-test elm-format elm-review
+        run: bun add -g elm@0.19.1-6 elm-test@0.19.1-revision17 elm-format@0.8.8 elm-review@2.13.5
 
       - name: Cache elm-stuff
         uses: actions/cache@v4
