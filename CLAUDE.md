@@ -157,7 +157,7 @@ Actor: { "sub": string, "type": string|null }                    // Elm field: t
 - ClerkJS 6 ships no UI; `mountSignIn` etc. need `clerk.load({ ui: { ClerkUI } })`. `@clerk/ui` on npm needs React peers, so the shim (`js/src/ui.ts`) injects `https://<frontend-api>/npm/@clerk/ui@<major>/dist/ui.browser.js` (host decoded from the publishable key, per Clerk's JS quickstart) and reads `window.__internal_ClerkUICtor`. `attachClerk` option `ui: 'cdn' | 'none'` (default `'cdn'`); a consumer-supplied `clerkOptions.ui.ClerkUI` wins. `coverage.json.clerkUiMajor` tracks the requested major.
 - The listener is registered with `skipInitialEmit: true`; the shim sends the first `stateChanged` itself so boot produces exactly one.
 - The Elm package lives at the repo root, not in `elm/` as SPEC section 3 shows: `elm publish` downloads the tagged GitHub archive and requires `elm.json` at its root, so a subdirectory package cannot be published.
-- `clerk-sync.md` uses `web-fetch: {}` rather than SPEC's `web-fetch: true`; gh-aw v0.88 rejects the boolean form. Recompile with `gh aw compile` after editing it and commit the lock file.
+- `clerk-sync.md` deviates from SPEC section 10 where gh-aw or the first live run demanded it: `web-fetch: {}` (v0.88 rejects the boolean), `bash: [":*"]` (the [git, node, npm, elm] allowlist denied pipes/curl and burned the budget), `max-turns: 150` and `timeout-minutes: 45`, plus the `clerk-bump` label as an alternative trigger for synthetic PRs. Recompile with `gh aw compile` after editing it and commit the lock file.
 
 ## Local e2e
 

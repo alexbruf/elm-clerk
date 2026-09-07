@@ -7,17 +7,19 @@ if: github.actor == 'dependabot[bot]' || contains(github.event.pull_request.labe
 engine: copilot
 permissions: read-all
 network:
-  allowed: [defaults, clerk.com, github.com, registry.npmjs.org, unpkg.com]
+  allowed: [defaults, github, node, clerk.com, unpkg.com, package.elm-lang.org]
 tools:
   web-fetch: {}
-  bash: [git, node, npm, elm]
+  # SPEC listed [git, node, npm, elm]; the first live run burned its budget on
+  # denied commands (pipes, curl, python3), so the sandboxed shell is unrestricted.
+  bash: [":*"]
 safe-outputs:
   create-pull-request:
     labels: [clerk-sync, needs-review]
     draft: true
   add-comment: {}
-timeout-minutes: 30
-max-turns: 60
+timeout-minutes: 45
+max-turns: 150
 ---
 
 # clerk-sync
@@ -29,16 +31,26 @@ against the new ClerkJS version, and to keep `coverage.json` at the repo
 root, the single source of truth for what this library implements, in
 agreement with the code. Follow these steps in order.
 
+Budget: you have at most 150 model calls in this run. Never `sleep`, busy-wait,
+or poll; if a GitHub API call is rate limited, use a different source (below)
+instead of waiting. Prefer one `web-fetch` or `curl` of a raw file over many
+GitHub search calls.
+
 1. **Read the version range in the Dependabot PR diff.** Look at the diff
    to `js/package.json` on this pull request and extract the old and new
    `@clerk/clerk-js` version (or range). You need both ends: the version
    `coverage.json`'s `clerkJsVersion` currently records, and the version
    Dependabot wants to move to.
 
-2. **Fetch Clerk's changelog for that range.** Use your web-fetch tool
-   against `https://clerk.com/changelog` and the `clerk/javascript` GitHub
-   releases for the `@clerk/clerk-js` package, covering every version
-   between the old and new pins. Extract anything relevant to the public
+2. **Fetch Clerk's changelog for that range.** The primary source is the
+   package changelog:
+   `https://raw.githubusercontent.com/clerk/javascript/main/packages/clerk-js/CHANGELOG.md`
+   (fetch it with `web-fetch` or `curl -s`, then read only the sections for
+   versions between the old and new pins). `https://clerk.com/changelog` and
+   the `clerk/javascript` GitHub releases are secondary. For type-level
+   detail, install the new version (`cd js && bun install`) and grep the
+   declarations under `js/node_modules/@clerk/shared/dist/types/` rather
+   than searching GitHub. Cover every version between the old and new pins. Extract anything relevant to the public
    surface this library touches: added, changed, deprecated, and removed
    public methods, `Clerk` constructor/`load` options, and fields on the
    `User`, `Session`, and `Organization` resources.
@@ -55,8 +67,11 @@ agreement with the code. Follow these steps in order.
 
 4. **Fix removed or changed surface. This is required, not optional.** For
    anything in the "changed" or "removed" list from step 3, update the Elm
-   types and decoders (`src/Clerk.elm`, `src/Clerk/User.elm`,
-   `src/Clerk/Session.elm`, `src/Clerk/Organization.elm`), the
+   types and decoders (`src/Clerk.elm` and the one-module-per-resource files
+   `src/Clerk/*.elm`; `CLAUDE.md` documents the JSON each field carries), the
+   JS serializers in `js/src/protocol.ts`, the shared fixtures
+   `fixtures/full.json` and `fixtures/empty.json` (then regenerate
+   `tests/Fixtures.elm` with `node scripts/gen-fixtures.mjs && elm-format --yes tests/Fixtures.elm`), the
    shim's dispatch table (`js/src/index.ts`'s `handlers`, and
    `js/src/protocol.ts`'s `OUTGOING_TAGS` if a tag itself needs to change),
    the tests in both `tests/` and `js/test/`, and `coverage.json`
@@ -75,9 +90,12 @@ agreement with the code. Follow these steps in order.
    to `coverage.json`'s `methods.deferred` instead, with a one-line reason
    in a sibling note.
 
-6. **Run the full CI suite locally before doing anything else.** Using the
-   `bash` tools available to you (`git`, `node`, `npm`, `elm`), run the same
-   checks `.github/workflows/ci.yml` runs: `elm-format --validate`,
+6. **Run the full CI suite locally before doing anything else.** First
+   install the toolchain exactly as `.github/workflows/ci.yml` does:
+   `npm i -g elm@0.19.1-6 elm-test@0.19.1-revision17 elm-format@0.8.8 elm-review@2.13.5`
+   and `bun install --frozen-lockfile` at the repo root (`bun` is provided;
+   `npm` is only for the global elm tools). Then run the same checks
+   `ci.yml` runs: `elm-format --validate`,
    `elm-review`, and `elm-test` at the repo root; `typecheck`, `build`, and `test`
    in `js/`; and both `node scripts/check-coverage.mjs` and
    `node scripts/check-readme.mjs` from the repo root. Do not proceed to
